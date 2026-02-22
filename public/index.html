@@ -33,20 +33,21 @@
     userList.innerHTML = users.map(u => `<li>${u.name} (${u.age})</li>`).join(""); // 
   }
 
+  // we want to do this using AJAX so that it does it in the background without reloading the page rather than an `method="POST"` in the HTML
   form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const formData = new FormData(form);
-    const data = {
+    e.preventDefault(); // e is the event that we were listening for 
+    const formData = new FormData(form); // creates a key/value pair set for extraction
+    const data = { // create javascript object to later turn into JSON LOLLLL
       name: formData.get("name"),
       age: formData.get("age")
     };
     await fetch("/api/users", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data)
+      body: JSON.stringify(data) // have to turn this into a JSON (which is different than a javascript object) to send as a HTTP request
     });
     form.reset();
-    fetchUsers();
+    fetchUsers(); // reload the users after adding one
   });
 
   fetchUsers();
