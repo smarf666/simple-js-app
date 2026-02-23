@@ -3,6 +3,7 @@ const path = require("path");
 const bodyParser = require("body-parser");
 const sqlite3 = require("sqlite3");
 const { open } = require("sqlite");
+const axios = require("axios");
 
 // Create Express app
 const app = express();
@@ -35,6 +36,24 @@ const dbPromise = open({ // open returns a promise when looking for the database
 })();
 
 // Routes 
+app.get("/pokemon/:pokemon", async (req, res) => {
+    const pokemonName = req.params.pokemon;
+
+    try {
+        const response = await axios.get(`https://pokeapi.co/api/v2/pokemon/${pokemonName}/`);
+
+        const pokemonData = {
+            name: response.data.name,
+            shinySprite: response.data.sprites.front_shiny
+        }
+
+        res.json(pokemonData) // send will send messages and stuff as test
+    } catch (e) {
+        res.status(500).json({ error: "Failed to fetch pokemon" });
+    }
+})
+
+
 app.get("/api/users", async (req, res) => {
     const db = await dbPromise;
 
@@ -43,7 +62,7 @@ app.get("/api/users", async (req, res) => {
     res.json(users); // return the table as a json
 });
 
-app.post("/api/users", async (req, res, next) => {
+app.post("/api/users", async (req, res) => {
     const { name, age } = req.body;
 
     if (!name || !age) return res.status(400).send("Missing name or age");

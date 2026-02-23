@@ -6,6 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Simple JS App</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+
+  <style>
+    img {
+      width: 20%;
+    }
+  </style>
 </head>
 
 <body>
@@ -16,39 +22,58 @@
     <input type="text" name="age" placeholder="Age" required />
     <button type="submit">Add User</button>
   </form>
+  <article id="pokemonImageContainer">
+
+  </article>
 
   <h2>Users</h2>
   <ul id="userList"></ul>
+
+  <script>
+    const form = document.getElementById("userForm");
+    const userList = document.getElementById("userList");
+    const pokemonImageContainer = document.getElementById("pokemonImageContainer");
+
+    async function fetchUsers() {
+      const res = await fetch("/api/users"); // standard way of calling APIs in javascript
+      const users = await res.json();
+      userList.innerHTML = users.map(u => `<li>${u.name} (${u.age})</li>`).join(""); // 
+    }
+
+    async function fetchPokemon() {
+      // test variable, before doing it for real
+      const testPokemon = 'ditto';
+
+      const res = await fetch(`/pokemon/${testPokemon}`);
+      // const imageUrl = await res.text(); // use .text() because it's a plain string, and use await because .text() is a promise
+      const data = await res.json(); // use json because the data received from the server is a json, use await because .json() is a promise
+
+      pokemonImageContainer.innerHTML = `
+        <h2>${data.name}</h2>
+        <img src=${data.shinySprite} alt="pokemon"></img>`
+
+    }
+
+    // we want to do this using AJAX so that it does it in the background without reloading the page rather than an `method="POST"` in the HTML
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault(); // e is the event that we were listening for 
+      const formData = new FormData(form); // creates a key/value pair set for extraction
+      const data = { // create javascript object to later turn into JSON LOLLLL
+        name: formData.get("name"),
+        age: formData.get("age")
+      };
+      await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data) // have to turn this into a JSON (which is different than a javascript object) to send as a HTTP request
+      });
+      form.reset();
+      fetchUsers(); // reload the users after adding one
+    });
+
+    fetchPokemon();
+    fetchUsers();
+  </script>
 </body>
 
 </html>
-
-<script>
-  const form = document.getElementById("userForm");
-  const userList = document.getElementById("userList");
-
-  async function fetchUsers() {
-    const res = await fetch("/api/users"); // standard way of calling APIs in javascript
-    const users = await res.json();
-    userList.innerHTML = users.map(u => `<li>${u.name} (${u.age})</li>`).join(""); // 
-  }
-
-  // we want to do this using AJAX so that it does it in the background without reloading the page rather than an `method="POST"` in the HTML
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault(); // e is the event that we were listening for 
-    const formData = new FormData(form); // creates a key/value pair set for extraction
-    const data = { // create javascript object to later turn into JSON LOLLLL
-      name: formData.get("name"),
-      age: formData.get("age")
-    };
-    await fetch("/api/users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data) // have to turn this into a JSON (which is different than a javascript object) to send as a HTTP request
-    });
-    form.reset();
-    fetchUsers(); // reload the users after adding one
-  });
-
-  fetchUsers();
-</script>
